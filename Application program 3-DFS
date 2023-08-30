@@ -69,3 +69,7 @@ int main() {
 
     return 0;
 }
+OUTPUT
+Connected Component: 0 1 2
+Connected Component: 3 4
+Connected Component: 5 6
