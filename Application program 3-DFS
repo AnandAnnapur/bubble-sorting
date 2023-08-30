@@ -1,36 +1,71 @@
 #include <stdio.h>
 #include <stdbool.h>
-#define MAX_VERTICES 100
-void DFS(int vertex, bool visited[], int adjacencyMatrix[][MAX_VERTICES], int numVertices) {
-    printf("%d ", vertex);
-    visited[vertex] = true;
-    for (int i = 0; i < numVertices; i++) {
-        if (adjacencyMatrix[vertex][i] == 1 && !visited[i]) {
-            DFS(i, visited, adjacencyMatrix, numVertices);
+
+#define MAX_NODES 100
+
+struct Graph {
+    int vertices;
+    int edges;
+    int adjacency[MAX_NODES][MAX_NODES];
+};
+
+void initGraph(struct Graph *g, int v) {
+    g->vertices = v;
+    g->edges = 0;
+    for (int i = 0; i < MAX_NODES; i++) {
+        for (int j = 0; j < MAX_NODES; j++) {
+            g->adjacency[i][j] = 0;
         }
     }
 }
-void findConnectedComponents(int adjacencyMatrix[][MAX_VERTICES], int numVertices) {
-    bool visited[MAX_VERTICES] = { false };
-    printf("Connected Components:\n");
-    for (int i = 0; i < numVertices; i++) {
+
+void addEdge(struct Graph *g, int u, int v) {
+    g->adjacency[u][v] = 1;
+    g->adjacency[v][u] = 1;
+    g->edges++;
+}
+
+void dfs(struct Graph *g, int node, bool visited[], int component[], int *componentSize) {
+    visited[node] = true;
+    component[(*componentSize)++] = node;
+
+    for (int i = 0; i < g->vertices; i++) {
+        if (g->adjacency[node][i] && !visited[i]) {
+            dfs(g, i, visited, component, componentSize);
+        }
+    }
+}
+
+void findConnectedComponents(struct Graph *g) {
+    bool visited[MAX_NODES] = { false };
+    
+    for (int i = 0; i < g->vertices; i++) {
         if (!visited[i]) {
-            DFS(i, visited, adjacencyMatrix, numVertices);
+            int component[MAX_NODES];
+            int componentSize = 0;
+            dfs(g, i, visited, component, &componentSize);
+
+            printf("Connected Component:");
+            for (int j = 0; j < componentSize; j++) {
+                printf(" %d", component[j]);
+            }
             printf("\n");
         }
     }
 }
+
 int main() {
-    int numVertices;
-    printf("Enter the number of vertices in the social network: ");
-    scanf("%d", &numVertices);
-    int adjacencyMatrix[MAX_VERTICES][MAX_VERTICES];
-    printf("Enter the adjacency matrix:\n");
-    for (int i = 0; i < numVertices; i++) {
-        for (int j = 0; j < numVertices; j++) {
-            scanf("%d", &adjacencyMatrix[i][j]);
-        }
-    }
-    findConnectedComponents(adjacencyMatrix, numVertices);
+    struct Graph graph;
+    int vertices = 7; // Adjust the number of vertices accordingly
+    initGraph(&graph, vertices);
+
+    addEdge(&graph, 0, 1);
+    addEdge(&graph, 0, 2);
+    addEdge(&graph, 1, 2);
+    addEdge(&graph, 3, 4);
+    addEdge(&graph, 5, 6);
+
+    findConnectedComponents(&graph);
+
     return 0;
 }
