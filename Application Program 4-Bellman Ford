@@ -1,68 +1,77 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdbool.h>
+#include <limits.h>
+
+#define MAX_CITIES 100
+
 struct Edge {
     int source, destination, weight;
 };
+
 struct Graph {
-    int numVertices, numEdges;
-    struct Edge* edges;
+    int vertices, edges;
+    struct Edge edge[MAX_CITIES];
 };
-struct Graph* createGraph(int numVertices, int numEdges) {
-    struct Graph* graph = (struct Graph*)malloc(sizeof(struct Graph));
-    graph->numVertices = numVertices;
-    graph->numEdges = numEdges;
-    graph->edges = (struct Edge*)malloc(numEdges * sizeof(struct Edge));
-    return graph;
+
+void initGraph(struct Graph *g, int v) {
+    g->vertices = v;
+    g->edges = 0;
 }
-void initializeDistances(int distances[], int numVertices, int source) {
-    for (int i = 0; i < numVertices; ++i) {
-        if (i == source)
-            distances[i] = 0;
-        else
-            distances[i] = INF;
+
+void addEdge(struct Graph *g, int src, int dest, int weight) {
+    g->edge[g->edges].source = src;
+    g->edge[g->edges].destination = dest;
+    g->edge[g->edges].weight = weight;
+    g->edges++;
+}
+
+void bellmanFord(struct Graph *g, int source) {
+    int distances[MAX_CITIES];
+    for (int i = 0; i < g->vertices; i++) {
+        distances[i] = INT_MAX;
     }
-}
-void relax(struct Edge edge, int distances[]) {
-    if (distances[edge.source] != INF && distances[edge.source] + edge.weight < distances[edge.destination]) {
-        distances[edge.destination] = distances[edge.source] + edge.weight;
-    }
-}
-void BellmanFord(struct Graph* graph, int source) {
-    int numVertices = graph->numVertices;
-    int numEdges = graph->numEdges;
-    int distances[numVertices];
-    initializeDistances(distances, numVertices, source);
-    for (int i = 1; i < numVertices; ++i) {
-        for (int j = 0; j < numEdges; ++j) {
-            relax(graph->edges[j], distances);
+    distances[source] = 0;
+
+    for (int i = 0; i < g->vertices - 1; i++) {
+        for (int j = 0; j < g->edges; j++) {
+            int u = g->edge[j].source;
+            int v = g->edge[j].destination;
+            int weight = g->edge[j].weight;
+            if (distances[u] != INT_MAX && distances[u] + weight < distances[v]) {
+                distances[v] = distances[u] + weight;
+            }
         }
     }
-    for (int i = 0; i < numEdges; ++i) {
-        struct Edge edge = graph->edges[i];
-        if (distances[edge.source] != INF && distances[edge.source] + edge.weight < distances[edge.destination]) {
-            printf("Negative-weight cycle detected\n");
-            return;
-        }
-    }
-    printf("Shortest distances from source %d:\n", source);
-    for (int i = 0; i < numVertices; ++i) {
-        printf("Vertex %d: Distance = %d\n", i, distances[i]);
+
+    // Print shortest distances
+    printf("Shortest distances from source city %d:\n", source);
+    for (int i = 0; i < g->vertices; i++) {
+        printf("To city %d: %d\n", i, distances[i]);
     }
 }
+
 int main() {
-    int numVertices, numEdges, source;
-    printf("Enter the number of vertices and edges: ");
-    scanf("%d %d", &numVertices, &numEdges);
-    
-    struct Graph* graph = createGraph(numVertices, numEdges);
-    
-    printf("Enter the edges (source, destination, weight):\n");
-    for (int i = 0; i < numEdges; ++i) {
-        scanf("%d %d %d", &graph->edges[i].source, &graph->edges[i].destination, &graph->edges[i].weight);
+    struct Graph graph;
+    int cities, edges;
+    printf("Enter the number of cities: ");
+    scanf("%d", &cities);
+    initGraph(&graph, cities);
+
+    printf("Enter the number of connections: ");
+    scanf("%d", &edges);
+
+    printf("Enter the connections (source destination weight):\n");
+    for (int i = 0; i < edges; i++) {
+        int src, dest, weight;
+        scanf("%d %d %d", &src, &dest, &weight);
+        addEdge(&graph, src, dest, weight);
     }
-    printf("Enter the source vertex: ");
-    scanf("%d", &source);
-    BellmanFord(graph, source);
+
+    int sourceCity;
+    printf("Enter the source city: ");
+    scanf("%d", &sourceCity);
+
+    bellmanFord(&graph, sourceCity);
+
     return 0;
 }
